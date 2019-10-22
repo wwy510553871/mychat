@@ -5,12 +5,14 @@ from app.view.friend import friend_blueprint
 from flask import render_template, request, make_response, send_from_directory, session, redirect, url_for, jsonify
 from app.service.UserService import UserService
 from app.service.FriendService import FriendService
+from app.service.MessageService import MessageService
 from app.utils.friend_utils import get_room_name
 import datetime
 
 
 userService = UserService()
 friendService = FriendService()
+messageService = MessageService()
 
 
 @friend_blueprint.route('/user/<int:my_id>/addfriend', methods=['POST'])
@@ -22,7 +24,7 @@ def add_friend_by_id_application(my_id):
         if application.status == 2 or application.status == 1:
             return jsonify({'code': MsgHandler.RepeatAddFriend, 'msg': msg_map.get(MsgHandler.RepeatAddFriend)})
         elif application.status == 0:
-            update_res = friendService.updateFriendApplicationStatus(application)
+            update_res = friendService.updateFriendApplicationStatus(application, 2)
             return jsonify(update_res)
     else:
         res = friendService.addFriendApplication(my_id, friend_id)
@@ -69,40 +71,54 @@ def delete_friend(my_id, friend_id):
         return jsonify(res)
 
 
-# @socketio.on('text', namespace='/chat')
-# def chat_with_friend(message):
-#     my_id = session.get('my_id')
-#     friend_id = session.get('friend_id')
-#     room_id = get_room_name(my_id, friend_id)
-#     join_room(room_id)
-#     msg = FriendMessage(msg=message['msg'], from_user_id=my_id, to_user_id=friend_id,
-#                         room_id=room_id, status=0)
-#     res = friendService.addMsg(msg)
-#     emit('message', {'from_user_id': my_id, 'to_user_id': friend_id, 'message': message['msg']}, room=room_id)
-#     return jsonify(res)
-
-
+# todo: 开发测试用
 @friend_blueprint.route('/friend_login', methods=['GET', 'POST'])
 def friend_login():
     if request.method == 'POST':
         session.clear()
         my_id = request.form['my_id']
-        friend_id = request.form['friend_id']
-        room_id = get_room_name(my_id, friend_id)
-        session['my_id'] = my_id
-        session['room'] = room_id
-        session['friend_id'] = friend_id
-        return redirect(url_for('friend_blueprint.friend_chat'))
+        password = request.form['password']
+        user = userService.selectById(my_id)
+        # room_id = get_room_name(my_id, friend_id)
+        if password == user.password:
+            session['my_id'] = my_id
+            return redirect(url_for('friend_blueprint.friend_chat'))
+
     # res = friendService.selectFriendApplicationByIdAndType(my_id, friend_id, 1)
     return render_template('friend_chat/index.html')
 
-
+# todo: 开发测试用
 @friend_blueprint.route('/friend_chat', methods=['GET'])
 def friend_chat():
-    room = session.get('room')
-    print(session)
-    print('23123213411', room)
-    return render_template('friend_chat/chat.html', room=room)
+
+    if session.get('my_id') is None:
+        return redirect(url_for('friend_blueprint.friend_login'))
+    my_id = session.get('my_id')
+    return render_template('friend_chat/chat.html', my_id=my_id)
+
+
+# todo 默认返回10条
+# 当打开房间时，所有未读消息均为已读
+# todo 翻页？拉取上一页？
+@friend_blueprint.route('/user/<int:my_id>/friend/<int:friend_id>/room')
+def enter_friend_room(my_id, friend_id):
+    room_id = get_room_name(my_id, friend_id)
+    session['room'] = room_id
+    res = messageService.selectMessageByIdOrderByTime(my_id, friend_id)
+    res_ls = []
+    for msg in res:
+        tmp = dict()
+        tmp['from_user_id'] = msg.from_user_id
+        tmp['to_user_id'] = msg.to_user_id
+        tmp['msg'] = msg.msg
+        tmp['create_time'] = msg.create_time
+        tmp['room'] = room_id
+        res_ls.append(tmp)
+    res_ls = res_ls[::,-1]
+    return jsonify({'code': MsgHandler.OK, 'msg': msg_map.get(MsgHandler.OK), 'params': res_ls[:10]})
+
+
+
 
 
 

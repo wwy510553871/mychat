@@ -18,6 +18,8 @@ class User(db2.Model):
     create_time = db2.Column(DateTime, default=datetime.now)
     modified_time = db2.Column(db2.DateTime, nullable=True, onupdate=datetime.now)
     my_chat_rooms = db2.relationship('ChatRoom', lazy='dynamic', backref='chat_user')
+    # todo: 待定，用于表示现在user处于哪个房间中，可为空
+    # now_in_room = db2.Column(db2.String(256), nullable=True, comment='用于表示现在user处于哪个房间中，可为空')
 
     def __init__(self, username, password, type):
         self.username = username
