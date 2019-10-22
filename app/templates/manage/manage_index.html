@@ -53,35 +53,13 @@
       <div class="row">
         <div class="col-sm-3 col-md-2 sidebar">
           <ul class="nav nav-sidebar">
-            <li><a href="{{ url_for('manage_blueprint.admin_index') }}">首页</a></li>
-            <li class="active"><a href="{{ url_for('manage_blueprint.admin_all_users') }}">用户信息 <span class="sr-only">(current)</span></a></li>
+            <li class="active"><a href="{{ url_for('manage_blueprint.admin_index') }}">首页 <span class="sr-only">(current)</span></a></li>
+            <li><a href="{{ url_for('manage_blueprint.admin_all_users') }}">用户信息</a></li>
           </ul>
         </div>
         <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
           <h1 class="page-header">WeChat</h1>
-          <h2 class="sub-header">用户信息</h2>
-          <div class="table-responsive">
-            <table class="table table-striped">
-              <thead>
-                <tr>
-                  <th>序号</th>
-                  <th>用户名</th>
-                  <th>密码</th>
-                  <th>创建时间</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for user in userList %}
-                    <tr>
-                        <th>{{ user.id }}</th>
-                        <th>{{ user.username }}</th>
-                        <th>{{ user.password }}</th>
-                        <th>{{ user.create_time }}</th>
-                    </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
+          <h2 class="sub-header">hello</h2>
         </div>
       </div>
     </div>

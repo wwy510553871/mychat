@@ -1,52 +1,49 @@
 from app.model.entity import User, db2
+from app.model.constant import MsgHandler, msg_map
 from app.view.auth import auth_blueprint
 from app.view.errorHandler import InvalidUsage
-from flask import render_template, request, make_response, send_from_directory, session, redirect, url_for
+from flask import Blueprint, flash, g, redirect, render_template, request, session, url_for, jsonify
 from app.service.UserService import UserService
 
 
 userService = UserService()
 
 # 注册
-@auth_blueprint.route('/register', methods=('GET', 'POST'))
+@auth_blueprint.route('/register', methods=['POST'])
 def register():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        if username is None:
-            raise InvalidUsage('用户名不可为空', 10401)
-        if password is None:
-            raise InvalidUsage('密码不可为空', 10402)
-        user = User(username, password, 0)
-        res = userService.add_user(user)
-        print(res)
-        if res['code'] != 10200:
-            raise InvalidUsage('注册失败', 10403)
-        else:
-            return redirect(url_for('auth_blueprint.login'))
-    return render_template('auth/register.html')
+    username = request.form['username']
+    password = request.form['password']
+    if username is None:
+        return jsonify({'code': MsgHandler.NameIsNone, 'msg': msg_map.get(MsgHandler.NameIsNone)})
+    if password is None:
+        return jsonify({'code': MsgHandler.PasswordIsNone, 'msg': msg_map.get(MsgHandler.PasswordIsNone)})
+    if userService.selectByName(username):
+        return jsonify({'code': MsgHandler.UserHasBeenRegister, 'msg': msg_map.get(MsgHandler.UserHasBeenRegister)})
+    user = User(username, password, 0)
+    res = userService.add_user(user)
+    return jsonify(res)
 
 
 # 用户登陆
-@auth_blueprint.route('/login', methods=('GET', 'POST'))
+@auth_blueprint.route('/login', methods=['POST'])
 def login():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        type = int(request.form['type'])
-        print('type {}'.format(type))
-        user = userService.selectByName(username, type)
-        if user:
-            if password == user.password:
-                session.clear()
-                session['user_id'] = user.id
-                if type == 0:
-                    return redirect(url_for('index'))
-                elif type == 1 or type == 2:
-                    return redirect(url_for('manage_blueprint.admin'))
-            else:
-                raise InvalidUsage('密码错误', 10404)
-    return render_template('auth/login.html')
+    username = request.form['username']
+    password = request.form['password']
+    type = int(request.form['type'])
+    user = userService.selectByNameAndType(username, type)
+    if user is None:
+        return jsonify({'code': MsgHandler.UserHasNotBeenRegister, 'msg': msg_map.get(MsgHandler.UserHasNotBeenRegister)})
+    else:
+        if password == user.password:
+            session.clear()
+            session['id'] = user.id
+            session['username'] = user.username
+            session['type'] = user.type
+            return jsonify({'code': MsgHandler.OK, 'msg': msg_map.get(MsgHandler.OK)})
+        else:
+            return jsonify({'code': MsgHandler.LoginError, 'msg': msg_map.get(MsgHandler.LoginError)})
+
+
 
 
 
