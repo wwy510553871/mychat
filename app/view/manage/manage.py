@@ -1,7 +1,7 @@
 from app.model.entity import User, db2
 from app.model.constant import MsgHandler, msg_map
 from app.view.manage import manage_blueprint
-from app.view.errorHandler import InvalidUsage
+
 from flask import render_template, request, make_response, send_from_directory, session, redirect, url_for, jsonify
 from app.service.UserService import UserService
 

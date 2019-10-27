@@ -1,7 +1,7 @@
 from app.model.entity import db2, User, ChatFriend
 from app.model.constant import MsgHandler, msg_map
 import traceback
-from app.utils.friend_utils import get_room_name
+from app.utils.socketioUtils import get_room_name
 from flask import jsonify
 import datetime
 

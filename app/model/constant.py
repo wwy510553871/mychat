@@ -16,7 +16,9 @@ class MsgHandler:
     AddFriendApplicationError = '4011'
     ApplicationIsNotExist = '4012'
     ApplicationStatusUpdateError = '4013'
-    SendMsgError = '4014'
+    SendMsgError = '4014',
+    UserTokenError = '4015',
+    InfoUpdateError = '4016'
 
 
 msg_map = {
@@ -34,5 +36,7 @@ msg_map = {
     MsgHandler.AddFriendApplicationError: '发送好友申请失败',
     MsgHandler.ApplicationIsNotExist: '无此好友申请',
     MsgHandler.ApplicationStatusUpdateError: '申请状态更新失败',
-    MsgHandler.SendMsgError: '发送消息失败'
+    MsgHandler.SendMsgError: '发送消息失败',
+    MsgHandler.UserTokenError: '用户为登陆',
+    MsgHandler.InfoUpdateError: '用户信息更新失败'
 }

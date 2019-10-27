@@ -1,15 +1,43 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
     <head>
         <title>Flask-SocketIO-Chat</title>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+        <script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js" charset="utf-8"></script>
+        <script src="https://cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js"></script>
+        <script type="text/javascript" charset="utf-8">
+            function login() {
+                $.ajax({
+                    type: 'POST',
+                    url: 'http://127.0.0.1:5000/friend_login',
+                    dataType: 'json',
+                    crossDomain: true,
+                    data: $('#login_form').serialize(),
+                    success: function (res) {
+                        console.log(res);
+                        if (res.code == 2000){
+                            console.log('登陆成功');
+                            sessionStorage.clear();
+                            sessionStorage.setItem('my_id', $('#my_id').val());
+                            window.location.href = 'chat.html'
+                        }
+                    }
+                })
+
+            }
+        </script>
     </head>
     <body>
         <h1>Flask-SocketIO-Chat</h1>
-        <form method="POST">
+        <form id="login_form" method="POST" onsubmit="return false">
             <label for="my_id">my_id</label>
             <input name="my_id" id="my_id" required>
             <label for="password">password</label>
             <input name="password" id="password" required>
-            <input type="submit" value="Log In">
+            <button id="login_button" class="btn btn-default" onclick="login()">登陆</button>
         </form>
     </body>
 </html>

@@ -6,7 +6,7 @@ from flask import render_template, request, make_response, send_from_directory, 
 from app.service.UserService import UserService
 from app.service.FriendService import FriendService
 from app.service.MessageService import MessageService
-from app.utils.friend_utils import get_room_name
+from app.utils.socketioUtils import get_room_name
 import datetime
 
 
@@ -28,7 +28,7 @@ def add_friend_by_id_application(my_id):
             return jsonify(update_res)
     else:
         res = friendService.addFriendApplication(my_id, friend_id)
-        return jsonify(res)
+        return make_response(jsonify(res))
 
 
 @friend_blueprint.route('/user/<int:my_id>/check/<int:friend_id>', methods=['POST'])
@@ -39,7 +39,7 @@ def check_friend_application(my_id, friend_id):
         return jsonify({'code': MsgHandler.ApplicationIsNotExist, 'msg': msg_map.get(MsgHandler.ApplicationIsNotExist)})
     else:
         res = friendService.checkFriendApplication(application, update_status)
-        return jsonify(res)
+        return make_response(jsonify(res))
 
 
 @friend_blueprint.route('/user/<int:my_id>/list', methods=['GET'])
@@ -57,8 +57,10 @@ def list_all_friends(my_id):
             dic['room_id'] = friend.room_id
             friend_user = userService.selectById(dic['friend_id'])
             dic['friend_name'] = friend_user.username
+            msg = messageService.selectMessageById(my_id, friend.friend_id, 0)
+            dic['new_msg_count'] = len(msg)
             res_ls.append(dic)
-        return jsonify({'code': MsgHandler.OK, 'msg': msg_map.get(MsgHandler.OK), 'params': res_ls})
+        return make_response(jsonify({'code': MsgHandler.OK, 'msg': msg_map.get(MsgHandler.OK), 'params': res_ls}))
 
 
 @friend_blueprint.route('/user/<int:my_id>/delete/<int:friend_id>')
@@ -68,33 +70,24 @@ def delete_friend(my_id, friend_id):
         return jsonify({'code': MsgHandler.ApplicationIsNotExist, 'msg': msg_map.get(MsgHandler.ApplicationIsNotExist)})
     else:
         res = friendService.updateFriendApplicationStatus(application, 0)
-        return jsonify(res)
+        return make_response(jsonify(res))
 
 
 # todo: 开发测试用
-@friend_blueprint.route('/friend_login', methods=['GET', 'POST'])
+@friend_blueprint.route('/friend_login', methods=['POST'])
 def friend_login():
-    if request.method == 'POST':
-        session.clear()
-        my_id = request.form['my_id']
-        password = request.form['password']
-        user = userService.selectById(my_id)
-        # room_id = get_room_name(my_id, friend_id)
-        if password == user.password:
-            session['my_id'] = my_id
-            return redirect(url_for('friend_blueprint.friend_chat'))
-
-    # res = friendService.selectFriendApplicationByIdAndType(my_id, friend_id, 1)
-    return render_template('friend_chat/index.html')
-
-# todo: 开发测试用
-@friend_blueprint.route('/friend_chat', methods=['GET'])
-def friend_chat():
-
-    if session.get('my_id') is None:
-        return redirect(url_for('friend_blueprint.friend_login'))
-    my_id = session.get('my_id')
-    return render_template('friend_chat/chat.html', my_id=my_id)
+    session.clear()
+    my_id = int(request.form['my_id'])
+    password = request.form['password']
+    user = userService.selectById(my_id)
+    # room_id = get_room_name(my_id, friend_id)
+    if password == user.password:
+        session['my_id'] = my_id
+        userService.userInit(user.id)
+        res = make_response(jsonify(userService.updataUserStatus(user.id, 1)))
+    else:
+        res = make_response(jsonify({'code': MsgHandler.LoginError, 'msg': msg_map.get(MsgHandler.LoginError)}))
+    return res
 
 
 # todo 默认返回10条
@@ -114,8 +107,8 @@ def enter_friend_room(my_id, friend_id):
         tmp['create_time'] = msg.create_time
         tmp['room'] = room_id
         res_ls.append(tmp)
-    res_ls = res_ls[::,-1]
-    return jsonify({'code': MsgHandler.OK, 'msg': msg_map.get(MsgHandler.OK), 'params': res_ls[:10]})
+
+    return make_response(jsonify({'code': MsgHandler.OK, 'msg': msg_map.get(MsgHandler.OK), 'params': res_ls}))
 
 
 

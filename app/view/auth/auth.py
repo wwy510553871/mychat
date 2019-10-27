@@ -1,8 +1,8 @@
 from app.model.entity import User, db2
 from app.model.constant import MsgHandler, msg_map
 from app.view.auth import auth_blueprint
-from app.view.errorHandler import InvalidUsage
-from flask import Blueprint, flash, g, redirect, render_template, request, session, url_for, jsonify
+
+from flask import Blueprint, flash, g, redirect, render_template, request, session, url_for, jsonify, make_response
 from app.service.UserService import UserService
 
 
@@ -35,11 +35,13 @@ def login():
         return jsonify({'code': MsgHandler.UserHasNotBeenRegister, 'msg': msg_map.get(MsgHandler.UserHasNotBeenRegister)})
     else:
         if password == user.password:
+            userService.userInit(user.id)
             session.clear()
-            session['id'] = user.id
+            session['my_id'] = user.id
             session['username'] = user.username
             session['type'] = user.type
-            return jsonify({'code': MsgHandler.OK, 'msg': msg_map.get(MsgHandler.OK)})
+            res = userService.updataUserStatus(user.id, 1)
+            return make_response(res)
         else:
             return jsonify({'code': MsgHandler.LoginError, 'msg': msg_map.get(MsgHandler.LoginError)})
 

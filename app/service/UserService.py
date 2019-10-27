@@ -83,5 +83,64 @@ class UserService:
     def selectAll(self):
         return db2.session.query(User).all()
 
+    """
+    用户状态修改，上线下线
+    """
+    def updataUserStatus(self, uid, user_status):
+        try:
+            res = db2.session.query(User).filter(User.id == uid).one()
+            res.user_status = user_status
+            db2.session.commit()
+            return {'code': MsgHandler.OK, 'msg': msg_map.get(MsgHandler.OK)}
+        except:
+            db2.session.rollback()
+            return {'code': MsgHandler.InfoUpdateError, 'msg': msg_map.get(MsgHandler.InfoUpdateError)}
+
+    """
+    保存用户sid
+    """
+    def addUserSid(self, uid, sid):
+        try:
+            res = db2.session.query(User).filter(User.id == uid).one()
+            res.sid = sid
+            db2.session.commit()
+            return {'code': MsgHandler.OK, 'msg': msg_map.get(MsgHandler.OK)}
+        except:
+            db2.session.rollback()
+            return {'code': MsgHandler.InfoUpdateError, 'msg': msg_map.get(MsgHandler.InfoUpdateError)}
+
+    """
+    加入房间
+    """
+    def addUserRoom(self, uid, room_id):
+        try:
+            res = db2.session.query(User).filter(User.id == uid).one()
+            res.now_in_room = room_id
+            db2.session.commit()
+            return {'code': MsgHandler.OK, 'msg': msg_map.get(MsgHandler.OK)}
+        except:
+            db2.session.rollback()
+            return {'code': MsgHandler.InfoUpdateError, 'msg': msg_map.get(MsgHandler.InfoUpdateError)}
+
+    """
+    用户状态重置，无论是正常重启还是kill后重启
+    """
+    def userInit(self, uid):
+        try:
+            res = db2.session.query(User).filter(User.id == uid).one()
+
+            if res.now_in_room is not None:
+                res.now_in_room = None
+            if res.sid is not None:
+                res.sid = None
+            if res.user_status == 1:
+                res.user_status = 0
+            db2.session.commit()
+        except Exception as e:
+            print('!!!!!!!!!!!!!!!!Exception!!!!!!!!!!!!!!!!!!', e)
+            db2.session.rollback()
+
+
+
 
 
